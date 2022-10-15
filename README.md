@@ -30,7 +30,7 @@ Pan-cancer data can be downloaded [here](https://github.com/sayali7/CMOT/tree/ma
 
 1. Train CMOT:
 ```r
-python3 run_cmot.py --sourceX ./src/data/Pan-Cancer/PanCancerX.csv --sourceY ./src/data/Pan-Cancer/PanCancerY.csv --targetY ./src/data/Pan-Cancer/PanCancerY_hat.csv --K 5 --d 10 --W ./src/data/Pan-Cancer/W.npy --hc 3 --reg_e 5e03 --reg_cl 1e00 --topFeat 150 --k 40
+python3 run_cmot.py --sourceX ./data/Pan-Cancer/PanCancerX.csv --sourceY ./data/Pan-Cancer/PanCancerY.csv --targetY ./data/Pan-Cancer/PanCancerY_hat.csv --K 5 --d 10 --W ./data/Pan-Cancer/W.npy --hc 3 --reg_e 5e03 --reg_cl 1e00 --topFeat 150 --k 40
 ```
 The command line arguments are:
 * sourceX: .csv file of size (s<sub>X</sub>, f<sub>X</sub>) for source modality X
@@ -54,7 +54,7 @@ The result is the normalized inferred modality $\widehat{X}$ of size (s<sub>$\wi
 
 2. Evaluate CMOT's inferred modality:
 ```r
-python3 cmot_evaluations.py --targetX_hat ./src/data/Pan-Cancer/PanCancerX_hat.csv --predX_hat .src/results/Norm_ModalityXhat.csv
+python3 cmot_evaluations.py --targetX_hat ./data/Pan-Cancer/PanCancerX_hat.csv --predX_hat ./results/Norm_ModalityXhat.csv
 ```
 * targetX_hat: .csv file of size (s<sub>$\widehat{X}$</sub>, f<sub>$\widehat{X}$</sub>) held-out target modality $\widehat{X}$
 * predX_hat: .csv file of inferred target modality $\widehat{X}$ by CMOT
