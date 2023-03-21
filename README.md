@@ -1,5 +1,7 @@
 # CMOT: Cross Modality Optimal Transport for multimodal inference
 
+[![DOI](https://zenodo.org/badge/551975347.svg)](https://zenodo.org/badge/latestdoi/551975347)
+
 ## Abstract
 <p align="justify">
 Biological mechanisms are complex spanning multiple facets, each providing a unique view of the underlying mechanism. Recent single-cell technologies such as scRNA-seq and scATAC-seq have facilitated parallel probing into each of these facets, providing multimodal measurements of individual cells. An integrative analysis of these single-cell modalities can therefore provide a comprehensive understanding of specific cellular and molecular mechanisms. Despite the technological advances, simultaneous profiling of multiple modalities of single cells continues to be challenging as opposed to single modality measurements, and therefore, it may not always be feasible to conduct such profiling experiments (e.g., missing modalities). Furthermore, even with the available multimodalities, data integration remains elusive since modalities may not always have paired samples, leaving partial to no correspondence information. 
@@ -7,13 +9,13 @@ To address those challenges, we developed Cross-Modality Optimal Transport (CMOT
 </p>
 
 ## Flow chart
-![alt text](https://github.com/sayali7/CMOT/blob/main/src/Fig1.png)
+![alt text](https://github.com/sayali7/CMOT/blob/main/src/Figure1.png)
 
 ## System requirements
-* Python 3.6 or above
-* Pandas 1.3.5
-* Numpy 1.21.4
-* Scikit-Learn 1.0.2
+* Python 3.6+
+* Pandas 1.3.5+
+* Numpy 1.21.4+
+* Scikit-Learn 1.0.2+
 * [Python Optimal Transport (POT)](https://pythonot.github.io/) [1]
 
 ## Download code
@@ -22,8 +24,9 @@ The code has been test on Python versions 3.6 and above on Linux.
 git clone https://github.com/daifengwanglab/CMOT
 cd CMOT/src
 ```
+
 ## Usage
-We demonstrate CMOT on Pan-Cancer data [2] for gene expression inference from chromatin accessiblity.
+We demonstrate CMOT on Pan-Cancer data [2] for gene expression(X) inference from chromatin accessiblity(Y).
 
 ### Download data
 Pan-cancer data can be downloaded [here](https://github.com/sayali7/CMOT/tree/main/src/data/Pan-Cancer).
@@ -46,6 +49,9 @@ The command line arguments are:
 * topFeat: integer specifying number of top variable features to use for K-nearest neighbors (Step C)
 * k: integer specifying the K-nearest neighbors for cross-modality inference (Step C)
 * outdir: output directory
+* param_search: enable for optimal parameter seach (default=False) 
+
+Parameter search (Optional): To perform parameter search for: reg_e, topFeat, and k, enable param_search i.e. add '--param_search True' argument.
 
 s<sub>X</sub>: number of cells in X, f<sub>X</sub>: number of features in X, s<sub>Y</sub>: number of cells in Y, f<sub>Y</sub>: number of cells in Y, s<sub>$\widehat{Y}$</sub>: number of cells in widehat{Y}, f<sub>$\widehat{Y}$</sub>: number of features in $\widehat{Y}$
  

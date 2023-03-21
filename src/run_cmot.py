@@ -54,16 +54,41 @@ def main(args):
     l = pd.DataFrame(hclabels, columns = ["HC"])
 
     # STEP C)
+    # Perform parameter search if enabled
+    
+    best_reg_e, best_top_feat, best_k=None,None,None
+    
+    if param_search:
+        best_reg_e, best_top_feat, best_k = cmot_parameter_search(X,Y,X_aligned,Y_aligned,labelYTrain)
+        print ("Best parameters found are:\n")
+        print ("reg_e:",reg_e,"\n")
+        print ("topFeat:",best_top_feat,"\n")
+        print ("k:",best_k,"\n")
+
+
     Xs = Y.to_numpy()
     ys = l["HC"].to_numpy()
     Xt = Y_hat.to_numpy() 
     method = "lpl1_reg"
-
+    
     # print ("Starting Optimal transport using:", method)
-    transp_Xs = optimal_transport(Xs,Xt,reg_e, reg_cl,ys, method)
+    if best_reg_e is not None:
+        transp_Xs = optimal_transport(Xs,Xt,ys, method,reg_e=best_reg_e)
+    else:
+        transp_Xs = optimal_transport(Xs,Xt,reg_e, reg_cl,ys, method)
 
     # print ("Predicting phenotype ...")
-    X_hat_pred = predict_phenotype(transp_Xs,Y_hat,X_BestMatch,ys,k,topFeat)
+    if best_k is not None:
+        if best_top_feat is not None:
+            X_hat_pred = predict_phenotype(transp_Xs,Y_hat,X_BestMatch,ys,k=best_k,topFeat=best_top_feat)
+    else:
+            X_hat_pred = predict_phenotype(transp_Xs,Y_hat,X_BestMatch,ys,k,topFeat)
+
+    # print ("Starting Optimal transport using:", method)
+    #transp_Xs = optimal_transport(Xs,Xt,reg_e, reg_cl,ys, method)
+
+    # print ("Predicting phenotype ...")
+    #X_hat_pred = predict_phenotype(transp_Xs,Y_hat,X_BestMatch,ys,k,topFeat)
     
     print ("Completed prediction!")
     print ("Total runtime:",time.time()-start)
@@ -88,6 +113,7 @@ if __name__ == "__main__":
     parser.add_argument('--topFeat', type=int, help='top variable features of Y to use for K-Nearest Neighbors (Step C)"', default = 100);
     parser.add_argument('--k', type=int, help='k-nearest neighbors for cross-modality inference (Step C)"', default = 1e00);
     parser.add_argument('--outdir', type=str, help='output directory to save results', default='./results')
+    parser.add_argument('--param_search', type=str, help='enable parameter search for CMOT"', default = False)
     
     args = parser.parse_args();
     main(args);

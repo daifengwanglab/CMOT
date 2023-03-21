@@ -159,3 +159,67 @@ def find_best_match_df(best_match,geNMA, geXTrain):
     geXTrainBestMatch = geXTrainBestMatch.reset_index(drop=True)
     
     return geNMABestMatch, geXTrainBestMatch
+
+def cmot_parameter_search(X,Y,X_aligned,Y_aligned,labels): 
+    
+    skf = StratifiedKFold(n_splits=2)
+    X=X.reset_index(drop=True)
+    Y=Y.reset_index(drop=True)
+    X_aligned=X_aligned.reset_index(drop=True)
+    Y_aligned=Y_aligned.reset_index(drop=True)
+    labels=labels.reset_index(drop=True)
+    
+    for train_index, test_index in skf.split(X, labels):
+
+        X_ps, X_hat_ps = X.loc[train_index], X.loc[test_index]
+        Y_ps, Y_hat_ps = Y.loc[train_index], Y.loc[test_index]
+
+        X_aligned_ps, X_hat_aligned_ps = X_aligned.loc[train_index], X_aligned.loc[test_index]
+        Y_aligned_ps, Y_hat_aligned_ps = Y_aligned.loc[train_index], Y_aligned.loc[test_index]
+        
+        best_match = get_best_match(X_aligned_ps,Y_aligned_ps)
+        X_NMABestMatch, X_BestMatch = find_best_match_df(best_match,X_aligned_ps, X_ps)
+        
+        if labels is not None:
+            labelYTrain_ps, labelYTest_ps = labels.loc[train_index], labels.loc[test_index]
+            
+        min_err=np.inf
+        best_reg_e = None
+        for reg_e in [10.0,100.0,200.0,500.0,1000.0,5000.0]:
+            ot_lpl1 = ot.da.SinkhornLpl1Transport(reg_e=reg_e, reg_cl=1e00,log=True)
+            ot_lpl1.fit(Xs=Y_ps.to_numpy(), ys=labelYTrain_ps["HC"].to_numpy(), Xt=Y_hat_ps.to_numpy())
+            transp_Xs_lpl1 = ot_lpl1.transform(Xs=Y_ps.to_numpy())  
+            if ot_lpl1.log_['err'][-1]<min_err:
+                min_err=ot_lpl1.log_['err'][-1]
+                best_reg_e = reg_e
+                
+        ot_lpl1 = ot.da.SinkhornLpl1Transport(reg_e=best_reg_e, reg_cl=1e00)
+        ot_lpl1.fit(Xs=Y_ps.to_numpy(), ys=labelYTrain_ps["HC"].to_numpy(), Xt=Y_hat_ps.to_numpy())
+        transp_Xs_lpl1 = ot_lpl1.transform(Xs=Y_ps.to_numpy())  
+        
+        k_vs_topfeat=pd.DataFrame()
+        for k in list(range(20,min(Y_ps.shape[0], Y_ps.shape[1]),20)):
+            for_each_k=[]
+            for topFeat in list(range(20,Y_ps.shape[1],20)):
+                
+                X_hat_ps_pred = predict_phenotype(transp_Xs_lpl1,Y_hat_ps,X_BestMatch,labelYTrain_ps.to_numpy(),k,topFeat)
+
+                predCorr = []
+                for i in range(len(X_hat_ps_pred)):
+                    a = X_hat_ps_pred.iloc[i][:]
+                    b = X_hat_ps.iloc[i][:]
+                    corr = stats.pearsonr(a,b)
+                    corr_sp = stats.spearmanr(a,b)
+                    predCorr.append(corr[0])
+
+                for_each_k.append(np.mean(predCorr))
+
+            k_vs_topfeat[str(k)] = for_each_k
+        
+        k_vs_topfeat.index=list(range(20,Y_ps.shape[1],20))
+
+        a, b = k_vs_topfeat.stack().idxmin()
+        best_top_feat = min(k_vs_topfeat.loc[[a], [b]].columns.to_list())
+        best_k = min(k_vs_topfeat.loc[[a], [b]].index.to_list())
+        
+        return best_reg_e, best_top_feat, best_k
