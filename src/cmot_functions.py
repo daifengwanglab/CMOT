@@ -34,6 +34,32 @@ def kmeans(X,Y,k=6):
     clusterLabels = kmeanModel.labels_  
     return clusterLabels
 
+def check_mapping_quality(ot_lpl1, transp_Xs_lpl1):
+    
+    coupling = ot_lpl1.coupling_
+    cost=ot_lpl1.cost_
+    prob_cost=coupling#np.multiply(coupling,cost)
+    prob_cost = np.transpose(prob_cost)
+
+    pca = PCA()
+    components = pca.fit_transform(prob_cost)
+
+    var_ratio = np.cumsum(pca.explained_variance_ratio_)
+    idx = np.where(var_ratio<=0.95)[0][-1]+1
+
+    clf = IsolationForest(random_state = 1, contamination= 'auto')
+    preds = clf.fit_predict(components[:,:idx])
+    
+    poor_mapped_cell_idx=np.argwhere(preds==-1).reshape(-1)
+    values=poor_mapped_cell_idx
+    with open("./poorly_mapped_cells.txt", "w") as output:
+        for row in values:
+            output.write(str(row) + '\n')
+  
+    poor_mapped_cell_percent = (len(np.argwhere(preds==-1).reshape(-1))/len(snpXTest))*100
+    print ("Warning: Found {} poorly mapped cells from the target modaity. Users can remove these cells to \
+    avoid incorrect imputation. Their cell ids are stored in poorly_mapped_cells.txt".format(poor_mapped_cell_percent))
+
 def optimal_transport(Xs,Xt,reg_e, reg_cl,ys=None,method="lpl1_reg"):
    
     if method == "emd":
@@ -51,7 +77,8 @@ def optimal_transport(Xs,Xt,reg_e, reg_cl,ys=None,method="lpl1_reg"):
     elif method == "lpl1_reg":
         ot_lpl1 = ot.da.SinkhornLpl1Transport(reg_e=reg_e, reg_cl=reg_cl)
         ot_lpl1.fit(Xs=Xs, ys=ys, Xt=Xt)
-        transp_Xs_lpl1 = ot_lpl1.transform(Xs=Xs)        
+        transp_Xs_lpl1 = ot_lpl1.transform(Xs=Xs)
+        check_mapping_quality(ot_lpl1, transp_Xs_lpl1)
         return transp_Xs_lpl1
        
     elif method == "emd_laplace":
