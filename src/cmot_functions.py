@@ -56,7 +56,7 @@ def check_mapping_quality(ot_lpl1, transp_Xs_lpl1):
         for row in values:
             output.write(str(row) + '\n')
   
-    poor_mapped_cell_percent = (len(np.argwhere(preds==-1).reshape(-1))/len(snpXTest))*100
+    poor_mapped_cell_percent = (len(np.argwhere(preds==-1).reshape(-1))/prob_cost.shape[0])*100
     print ("Warning: Found {} poorly mapped cells from the target modaity. Users can remove these cells to \
     avoid incorrect imputation. Their cell ids are stored in poorly_mapped_cells.txt".format(poor_mapped_cell_percent))
 
